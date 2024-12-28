@@ -37,6 +37,21 @@ export default function Index() {
         { keyword: `${topic} for beginners`, score: baseScore - 5 },
         { keyword: `${topic} tips and tricks`, score: baseScore - 10 },
         { keyword: `best ${topic} guide`, score: baseScore - 15 },
+        { keyword: `${topic} step by step`, score: baseScore - 8 },
+        { keyword: `${topic} masterclass`, score: baseScore - 12 },
+        { keyword: `learn ${topic}`, score: baseScore - 7 },
+        { keyword: `${topic} basics`, score: baseScore - 6 },
+        { keyword: `${topic} advanced techniques`, score: baseScore - 20 },
+        { keyword: `${topic} explained`, score: baseScore - 4 },
+        { keyword: `${topic} course`, score: baseScore - 9 },
+        { keyword: `${topic} guide 2024`, score: baseScore - 11 },
+        { keyword: `${topic} examples`, score: baseScore - 13 },
+        { keyword: `${topic} lessons`, score: baseScore - 14 },
+        { keyword: `${topic} training`, score: baseScore - 16 },
+        { keyword: `${topic} workshop`, score: baseScore - 17 },
+        { keyword: `${topic} fundamentals`, score: baseScore - 18 },
+        { keyword: `${topic} made easy`, score: baseScore - 19 },
+        { keyword: `complete ${topic} guide`, score: baseScore - 21 },
       ];
       setKeywords(dummyKeywords);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
