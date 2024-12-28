@@ -6,12 +6,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Copy, Youtube } from "lucide-react";
 import KeywordCard from "@/components/KeywordCard";
 import RecentSearches from "@/components/RecentSearches";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export default function Index() {
   const [topic, setTopic] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [keywords, setKeywords] = useState<Array<{ keyword: string; score: number }>>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [competition, setCompetition] = useState("medium");
   const { toast } = useToast();
 
   const generateKeywords = async () => {
@@ -25,14 +28,15 @@ export default function Index() {
     }
 
     setIsLoading(true);
-    // Simulate API call with dummy data
+    // Simulate API call with dummy data adjusted by competition level
     setTimeout(() => {
+      let baseScore = competition === "easy" ? 40 : competition === "medium" ? 70 : 90;
       const dummyKeywords = [
-        { keyword: `${topic} tutorial`, score: 95 },
-        { keyword: `how to ${topic}`, score: 90 },
-        { keyword: `${topic} for beginners`, score: 85 },
-        { keyword: `${topic} tips and tricks`, score: 80 },
-        { keyword: `best ${topic} guide`, score: 75 },
+        { keyword: `${topic} tutorial`, score: baseScore + 5 },
+        { keyword: `how to ${topic}`, score: baseScore },
+        { keyword: `${topic} for beginners`, score: baseScore - 5 },
+        { keyword: `${topic} tips and tricks`, score: baseScore - 10 },
+        { keyword: `best ${topic} guide`, score: baseScore - 15 },
       ];
       setKeywords(dummyKeywords);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
@@ -76,6 +80,28 @@ export default function Index() {
                 ) : null}
                 Generate Keywords
               </Button>
+            </div>
+
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <Label className="text-sm font-medium mb-2 block">Keyword Competition Level</Label>
+              <RadioGroup
+                value={competition}
+                onValueChange={setCompetition}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="easy" id="easy" />
+                  <Label htmlFor="easy">Easy</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="medium" id="medium" />
+                  <Label htmlFor="medium">Medium</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="hard" id="hard" />
+                  <Label htmlFor="hard">Hard</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             {keywords.length > 0 && (
