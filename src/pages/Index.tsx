@@ -8,6 +8,7 @@ import KeywordCard from "@/components/KeywordCard";
 import RecentSearches from "@/components/RecentSearches";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 
 export default function Index() {
   const [topic, setTopic] = useState("");
@@ -81,8 +82,8 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-youtube-light p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-youtube-light p-4 md:p-8 flex flex-col">
+      <div className="max-w-4xl mx-auto space-y-8 flex-grow">
         <div className="flex items-center justify-center space-x-2 text-youtube-red">
           <Youtube size={40} />
           <h1 className="text-3xl font-bold">YouTube Keywords Generator</h1>
@@ -172,6 +173,21 @@ export default function Index() {
 
         <RecentSearches searches={recentSearches} onSelect={setTopic} />
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-12 border-t pt-8 pb-4">
+        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+          <Link to="/privacy-policy" className="hover:text-youtube-red">
+            Privacy Policy
+          </Link>
+          <Link to="/terms-and-conditions" className="hover:text-youtube-red">
+            Terms & Conditions
+          </Link>
+          <Link to="/about-us" className="hover:text-youtube-red">
+            About Us
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
