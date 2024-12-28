@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,18 @@ export default function Index() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [competition, setCompetition] = useState("medium");
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Load AdSense script
+    const loadAdSense = () => {
+      const script = document.createElement("script");
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    };
+    loadAdSense();
+  }, []);
 
   const generateKeywords = async () => {
     if (!topic.trim()) {
@@ -117,6 +129,18 @@ export default function Index() {
                   <Label htmlFor="hard">Hard</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* AdSense Ad Container */}
+            <div className="my-6">
+              <ins
+                className="adsbygoogle"
+                style={{ display: "block" }}
+                data-ad-client="YOUR-AD-CLIENT-ID" // Replace with your AdSense client ID
+                data-ad-slot="YOUR-AD-SLOT-ID" // Replace with your AdSense ad slot ID
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
             </div>
 
             {keywords.length > 0 && (
