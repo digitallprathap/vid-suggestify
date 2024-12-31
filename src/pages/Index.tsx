@@ -8,7 +8,6 @@ import KeywordCard from "@/components/KeywordCard";
 import RecentSearches from "@/components/RecentSearches";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
 
 export default function Index() {
   const [topic, setTopic] = useState("");
@@ -82,8 +81,8 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-youtube-light p-4 md:p-8 flex flex-col">
-      <div className="max-w-4xl mx-auto space-y-8 flex-grow">
+    <div className="p-4 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-center space-x-2 text-youtube-red">
           <Youtube size={40} />
           <h1 className="text-3xl font-bold">YouTube Keywords Generator</h1>
@@ -103,15 +102,15 @@ export default function Index() {
                 disabled={isLoading}
                 className="bg-youtube-red hover:bg-red-600"
               >
-                {isLoading ? (
-                  <Loader2 className="animate-spin mr-2" />
-                ) : null}
+                {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
                 Generate Keywords
               </Button>
             </div>
 
             <div className="border rounded-lg p-4 bg-gray-50">
-              <Label className="text-sm font-medium mb-2 block">Keyword Competition Level</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                Keyword Competition Level
+              </Label>
               <RadioGroup
                 value={competition}
                 onValueChange={setCompetition}
@@ -137,8 +136,8 @@ export default function Index() {
               <ins
                 className="adsbygoogle"
                 style={{ display: "block" }}
-                data-ad-client="YOUR-AD-CLIENT-ID" // Replace with your AdSense client ID
-                data-ad-slot="YOUR-AD-SLOT-ID" // Replace with your AdSense ad slot ID
+                data-ad-client="YOUR-AD-CLIENT-ID"
+                data-ad-slot="YOUR-AD-SLOT-ID"
                 data-ad-format="auto"
                 data-full-width-responsive="true"
               />
@@ -173,21 +172,6 @@ export default function Index() {
 
         <RecentSearches searches={recentSearches} onSelect={setTopic} />
       </div>
-      
-      {/* Footer */}
-      <footer className="mt-12 border-t pt-8 pb-4">
-        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-          <Link to="/privacy-policy" className="hover:text-youtube-red">
-            Privacy Policy
-          </Link>
-          <Link to="/terms-and-conditions" className="hover:text-youtube-red">
-            Terms & Conditions
-          </Link>
-          <Link to="/about-us" className="hover:text-youtube-red">
-            About Us
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }
