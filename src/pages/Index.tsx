@@ -27,15 +27,24 @@ export default function Index() {
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
+      console.log('Calling generate-keywords function with:', { topic, competition });
       const { data, error } = await supabase.functions.invoke('generate-keywords', {
         body: { topic, competition }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
-      console.log("Generated keywords:", data);
+      console.log('Generated keywords:', data);
       setKeywords(data.keywords);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
+      
+      toast({
+        title: "Keywords Generated",
+        description: `Generated ${data.keywords.length} keyword suggestions`,
+      });
     } catch (error) {
       console.error("Error generating keywords:", error);
       toast({
