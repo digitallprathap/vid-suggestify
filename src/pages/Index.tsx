@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Copy, Youtube } from "lucide-react";
+import { Loader2, Copy, Youtube, Key } from "lucide-react";
 import KeywordCard from "@/components/KeywordCard";
 import RecentSearches from "@/components/RecentSearches";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -15,6 +15,7 @@ export default function Index() {
   const [keywords, setKeywords] = useState<Array<{ keyword: string; score: number }>>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [competition, setCompetition] = useState("medium");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || "");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,36 +40,58 @@ export default function Index() {
       return;
     }
 
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key to generate keywords",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call with dummy data adjusted by competition level
-    setTimeout(() => {
-      let baseScore = competition === "easy" ? 40 : competition === "medium" ? 70 : 90;
-      const dummyKeywords = [
-        { keyword: `${topic} tutorial`, score: baseScore + 5 },
-        { keyword: `how to ${topic}`, score: baseScore },
-        { keyword: `${topic} for beginners`, score: baseScore - 5 },
-        { keyword: `${topic} tips and tricks`, score: baseScore - 10 },
-        { keyword: `best ${topic} guide`, score: baseScore - 15 },
-        { keyword: `${topic} step by step`, score: baseScore - 8 },
-        { keyword: `${topic} masterclass`, score: baseScore - 12 },
-        { keyword: `learn ${topic}`, score: baseScore - 7 },
-        { keyword: `${topic} basics`, score: baseScore - 6 },
-        { keyword: `${topic} advanced techniques`, score: baseScore - 20 },
-        { keyword: `${topic} explained`, score: baseScore - 4 },
-        { keyword: `${topic} course`, score: baseScore - 9 },
-        { keyword: `${topic} guide 2024`, score: baseScore - 11 },
-        { keyword: `${topic} examples`, score: baseScore - 13 },
-        { keyword: `${topic} lessons`, score: baseScore - 14 },
-        { keyword: `${topic} training`, score: baseScore - 16 },
-        { keyword: `${topic} workshop`, score: baseScore - 17 },
-        { keyword: `${topic} fundamentals`, score: baseScore - 18 },
-        { keyword: `${topic} made easy`, score: baseScore - 19 },
-        { keyword: `complete ${topic} guide`, score: baseScore - 21 },
-      ];
-      setKeywords(dummyKeywords);
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a YouTube SEO expert. Generate a list of 20 keyword ideas with their competition scores (0-100). Format as JSON array with 'keyword' and 'score' properties.",
+            },
+            {
+              role: "user",
+              content: `Generate YouTube keyword ideas for: ${topic}. Competition level preference: ${competition}. Include long-tail variations and trending topics.`,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate keywords");
+      }
+
+      const data = await response.json();
+      console.log("OpenAI response:", data);
+
+      const keywordsList = JSON.parse(data.choices[0].message.content);
+      setKeywords(keywordsList);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
+    } catch (error) {
+      console.error("Error generating keywords:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate keywords. Please check your API key and try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const copyAllKeywords = () => {
@@ -78,6 +101,12 @@ export default function Index() {
       title: "Keywords copied!",
       description: "All keywords have been copied to your clipboard",
     });
+  };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setApiKey(newKey);
+    localStorage.setItem("openai_api_key", newKey);
   };
 
   return (
@@ -90,21 +119,33 @@ export default function Index() {
 
         <Card className="p-6">
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter your video topic..."
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={generateKeywords}
-                disabled={isLoading}
-                className="bg-youtube-red hover:bg-red-600"
-              >
-                {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                Generate Keywords
-              </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg">
+                <Key className="text-gray-500" size={20} />
+                <Input
+                  type="password"
+                  placeholder="Enter your OpenAI API key..."
+                  value={apiKey}
+                  onChange={handleApiKeyChange}
+                  className="flex-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter your video topic..."
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={generateKeywords}
+                  disabled={isLoading}
+                  className="bg-youtube-red hover:bg-red-600"
+                >
+                  {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
+                  Generate Keywords
+                </Button>
+              </div>
             </div>
 
             <div className="border rounded-lg p-4 bg-gray-50">
