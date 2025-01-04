@@ -14,14 +14,18 @@ export default function Index() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadAdSense = () => {
-      const script = document.createElement("script");
-      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      document.head.appendChild(script);
-    };
-    loadAdSense();
+    try {
+      // Initialize AdSense only if it hasn't been initialized yet
+      if (!(window as any).adsbygoogle) {
+        const script = document.createElement("script");
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        document.head.appendChild(script);
+      }
+    } catch (error) {
+      console.error("Error loading AdSense:", error);
+    }
   }, []);
 
   const generateKeywords = async (topic: string, competition: string) => {
@@ -68,19 +72,6 @@ export default function Index() {
         <Card className="p-6">
           <div className="space-y-4">
             <SearchForm onSearch={generateKeywords} isLoading={isLoading} />
-
-            {/* AdSense Ad Container */}
-            <div className="my-6">
-              <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="YOUR-AD-CLIENT-ID"
-                data-ad-slot="YOUR-AD-SLOT-ID"
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-
             <KeywordResults keywords={keywords} />
           </div>
         </Card>
