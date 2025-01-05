@@ -6,62 +6,53 @@ import SearchForm from "@/components/SearchForm";
 import KeywordResults from "@/components/KeywordResults";
 import RecentSearches from "@/components/RecentSearches";
 
-// Local keyword generation logic
-const generateLocalKeywords = (topic: string, competition: string) => {
-  console.log('Generating local keywords for:', { topic, competition });
+// Function to fetch YouTube search suggestions
+const fetchYouTubeSuggestions = async (query: string): Promise<string[]> => {
+  try {
+    console.log('Fetching YouTube suggestions for:', query);
+    const response = await fetch(
+      `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}`,
+      { mode: 'cors' }
+    );
+    const data = await response.json();
+    console.log('Received suggestions:', data[1]);
+    return data[1] || [];
+  } catch (error) {
+    console.error('Error fetching YouTube suggestions:', error);
+    return [];
+  }
+};
+
+// Enhanced keyword generation with YouTube suggestions
+const generateLocalKeywords = async (topic: string, competition: string) => {
+  console.log('Generating keywords for:', { topic, competition });
   
-  // Remove special characters and split into words
-  const words = topic.toLowerCase().replace(/[^\w\s]/gi, '').split(' ');
   const baseKeywords = new Set<string>();
   
-  // Common YouTube prefixes and suffixes
+  // Common YouTube prefixes to get more varied suggestions
   const prefixes = [
-    'how to', 'best', 'top', 'why', 'what is', 
-    'guide to', 'tips for', 'review of',
+    '',
+    'how to',
+    'best',
+    'top',
     competition === 'easy' ? 'beginner' : 'advanced',
-    competition === 'easy' ? 'simple' : 'professional'
-  ];
-  
-  const suffixes = [
-    'tutorial', 'guide', 'tips', 'tricks',
-    'for beginners', 'step by step', 'explained',
-    competition === 'easy' ? '2024' : 'masterclass',
-    competition === 'easy' ? 'basics' : 'advanced techniques'
+    'guide'
   ];
 
-  // Generate base keyword
-  baseKeywords.add(topic.toLowerCase());
-
-  // Generate variations with prefixes
-  prefixes.forEach(prefix => {
-    baseKeywords.add(`${prefix} ${topic.toLowerCase()}`);
+  // Fetch suggestions for each prefix
+  for (const prefix of prefixes) {
+    const searchQuery = prefix ? `${prefix} ${topic}` : topic;
+    const suggestions = await fetchYouTubeSuggestions(searchQuery);
     
-    // Combine words for more specific phrases
-    words.forEach(word => {
-      if (word.length > 3) { // Only use meaningful words
-        baseKeywords.add(`${prefix} ${word}`);
-      }
+    suggestions.forEach(suggestion => {
+      baseKeywords.add(suggestion.toLowerCase());
     });
-  });
-
-  // Generate variations with suffixes
-  suffixes.forEach(suffix => {
-    baseKeywords.add(`${topic.toLowerCase()} ${suffix}`);
-    
-    // Combine with prefixes for more variations
-    prefixes.slice(0, 3).forEach(prefix => {
-      baseKeywords.add(`${prefix} ${topic.toLowerCase()} ${suffix}`);
-    });
-  });
-
-  // Add specific YouTube content patterns
-  if (words.length > 1) {
-    baseKeywords.add(`${topic.toLowerCase()} comparison`);
-    baseKeywords.add(`${topic.toLowerCase()} review ${new Date().getFullYear()}`);
-    baseKeywords.add(`complete ${topic.toLowerCase()} guide`);
   }
 
-  // Convert to array and calculate competition scores
+  // Add the original topic
+  baseKeywords.add(topic.toLowerCase());
+
+  // Calculate competition scores
   const competitionMultiplier = {
     easy: 0.4,
     medium: 0.7,
@@ -78,7 +69,7 @@ const generateLocalKeywords = (topic: string, competition: string) => {
           (
             keyword.split(' ').length * 8 + // More words = higher score
             (keyword.includes('how to') ? 15 : 0) + // Bonus for "how to"
-            (keyword.includes('2024') ? 10 : 0) + // Bonus for current year
+            (keyword.includes(new Date().getFullYear().toString()) ? 10 : 0) + // Bonus for current year
             (keyword.includes('tutorial') ? 12 : 0) + // Bonus for tutorial
             (keyword.length > 20 ? 5 : 0) // Bonus for longer phrases
           ) * competitionMultiplier
@@ -101,7 +92,6 @@ export default function Index() {
 
   useEffect(() => {
     try {
-      // Initialize AdSense only if it hasn't been initialized yet
       if (!(window as any).adsbygoogle) {
         const script = document.createElement("script");
         script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID";
@@ -117,7 +107,7 @@ export default function Index() {
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
-      const generatedKeywords = generateLocalKeywords(topic, competition);
+      const generatedKeywords = await generateLocalKeywords(topic, competition);
       console.log('Generated keywords:', generatedKeywords);
       
       setKeywords(generatedKeywords);
@@ -125,7 +115,7 @@ export default function Index() {
       
       toast({
         title: "Keywords Generated",
-        description: `Generated ${generatedKeywords.length} keyword suggestions`,
+        description: `Generated ${generatedKeywords.length} keyword suggestions from YouTube`,
       });
     } catch (error) {
       console.error("Error generating keywords:", error);
