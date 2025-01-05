@@ -13,20 +13,6 @@ export default function Index() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    try {
-      if (!(window as any).adsbygoogle) {
-        const script = document.createElement("script");
-        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID";
-        script.async = true;
-        script.crossOrigin = "anonymous";
-        document.head.appendChild(script);
-      }
-    } catch (error) {
-      console.error("Error loading AdSense:", error);
-    }
-  }, []);
-
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
