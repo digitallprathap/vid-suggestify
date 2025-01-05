@@ -14,45 +14,83 @@ const generateLocalKeywords = (topic: string, competition: string) => {
   const words = topic.toLowerCase().replace(/[^\w\s]/gi, '').split(' ');
   const baseKeywords = new Set<string>();
   
-  // Generate variations
-  words.forEach(word => {
-    // Add single word
-    baseKeywords.add(word);
+  // Common YouTube prefixes and suffixes
+  const prefixes = [
+    'how to', 'best', 'top', 'why', 'what is', 
+    'guide to', 'tips for', 'review of',
+    competition === 'easy' ? 'beginner' : 'advanced',
+    competition === 'easy' ? 'simple' : 'professional'
+  ];
+  
+  const suffixes = [
+    'tutorial', 'guide', 'tips', 'tricks',
+    'for beginners', 'step by step', 'explained',
+    competition === 'easy' ? '2024' : 'masterclass',
+    competition === 'easy' ? 'basics' : 'advanced techniques'
+  ];
+
+  // Generate base keyword
+  baseKeywords.add(topic.toLowerCase());
+
+  // Generate variations with prefixes
+  prefixes.forEach(prefix => {
+    baseKeywords.add(`${prefix} ${topic.toLowerCase()}`);
     
-    // Add with "how to" prefix
-    baseKeywords.add(`how to ${word}`);
-    
-    // Add with "best" prefix
-    baseKeywords.add(`best ${word}`);
-    
-    // Add with "tutorial" suffix
-    baseKeywords.add(`${word} tutorial`);
-    
-    // Combine words for longer phrases
-    words.forEach(otherWord => {
-      if (word !== otherWord) {
-        baseKeywords.add(`${word} ${otherWord}`);
-        baseKeywords.add(`best ${word} ${otherWord}`);
-        baseKeywords.add(`${word} ${otherWord} tutorial`);
+    // Combine words for more specific phrases
+    words.forEach(word => {
+      if (word.length > 3) { // Only use meaningful words
+        baseKeywords.add(`${prefix} ${word}`);
       }
     });
   });
 
-  // Convert to array and add competition scores
+  // Generate variations with suffixes
+  suffixes.forEach(suffix => {
+    baseKeywords.add(`${topic.toLowerCase()} ${suffix}`);
+    
+    // Combine with prefixes for more variations
+    prefixes.slice(0, 3).forEach(prefix => {
+      baseKeywords.add(`${prefix} ${topic.toLowerCase()} ${suffix}`);
+    });
+  });
+
+  // Add specific YouTube content patterns
+  if (words.length > 1) {
+    baseKeywords.add(`${topic.toLowerCase()} comparison`);
+    baseKeywords.add(`${topic.toLowerCase()} review ${new Date().getFullYear()}`);
+    baseKeywords.add(`complete ${topic.toLowerCase()} guide`);
+  }
+
+  // Convert to array and calculate competition scores
   const competitionMultiplier = {
-    easy: 0.3,
-    medium: 0.6,
+    easy: 0.4,
+    medium: 0.7,
     hard: 0.9
   }[competition];
 
-  return Array.from(baseKeywords).map(keyword => ({
-    keyword,
-    // Generate a semi-random but consistent score based on keyword length and competition
-    score: Math.min(
-      Math.round((keyword.length * 3 + keyword.split(' ').length * 10) * competitionMultiplier),
-      100
-    )
-  })).slice(0, 10); // Limit to 10 keywords
+  const keywordsArray = Array.from(baseKeywords)
+    .filter(keyword => keyword.length <= 60) // YouTube title length limit
+    .map(keyword => ({
+      keyword,
+      // Score based on multiple factors
+      score: Math.min(
+        Math.round(
+          (
+            keyword.split(' ').length * 8 + // More words = higher score
+            (keyword.includes('how to') ? 15 : 0) + // Bonus for "how to"
+            (keyword.includes('2024') ? 10 : 0) + // Bonus for current year
+            (keyword.includes('tutorial') ? 12 : 0) + // Bonus for tutorial
+            (keyword.length > 20 ? 5 : 0) // Bonus for longer phrases
+          ) * competitionMultiplier
+        ),
+        100
+      )
+    }))
+    .sort((a, b) => b.score - a.score) // Sort by score
+    .slice(0, 15); // Get top 15 keywords
+
+  console.log('Generated keywords with scores:', keywordsArray);
+  return keywordsArray;
 };
 
 export default function Index() {
@@ -79,7 +117,6 @@ export default function Index() {
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
-      // Generate keywords locally
       const generatedKeywords = generateLocalKeywords(topic, competition);
       console.log('Generated keywords:', generatedKeywords);
       
