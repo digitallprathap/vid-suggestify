@@ -5,7 +5,55 @@ import { useToast } from "@/components/ui/use-toast";
 import SearchForm from "@/components/SearchForm";
 import KeywordResults from "@/components/KeywordResults";
 import RecentSearches from "@/components/RecentSearches";
-import { supabase } from "@/integrations/supabase/client";
+
+// Local keyword generation logic
+const generateLocalKeywords = (topic: string, competition: string) => {
+  console.log('Generating local keywords for:', { topic, competition });
+  
+  // Remove special characters and split into words
+  const words = topic.toLowerCase().replace(/[^\w\s]/gi, '').split(' ');
+  const baseKeywords = new Set<string>();
+  
+  // Generate variations
+  words.forEach(word => {
+    // Add single word
+    baseKeywords.add(word);
+    
+    // Add with "how to" prefix
+    baseKeywords.add(`how to ${word}`);
+    
+    // Add with "best" prefix
+    baseKeywords.add(`best ${word}`);
+    
+    // Add with "tutorial" suffix
+    baseKeywords.add(`${word} tutorial`);
+    
+    // Combine words for longer phrases
+    words.forEach(otherWord => {
+      if (word !== otherWord) {
+        baseKeywords.add(`${word} ${otherWord}`);
+        baseKeywords.add(`best ${word} ${otherWord}`);
+        baseKeywords.add(`${word} ${otherWord} tutorial`);
+      }
+    });
+  });
+
+  // Convert to array and add competition scores
+  const competitionMultiplier = {
+    easy: 0.3,
+    medium: 0.6,
+    hard: 0.9
+  }[competition];
+
+  return Array.from(baseKeywords).map(keyword => ({
+    keyword,
+    // Generate a semi-random but consistent score based on keyword length and competition
+    score: Math.min(
+      Math.round((keyword.length * 3 + keyword.split(' ').length * 10) * competitionMultiplier),
+      100
+    )
+  })).slice(0, 10); // Limit to 10 keywords
+};
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,29 +79,22 @@ export default function Index() {
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
-      console.log('Calling generate-keywords function with:', { topic, competition });
-      const { data, error } = await supabase.functions.invoke('generate-keywords', {
-        body: { topic, competition }
-      });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-
-      console.log('Generated keywords:', data);
-      setKeywords(data.keywords);
+      // Generate keywords locally
+      const generatedKeywords = generateLocalKeywords(topic, competition);
+      console.log('Generated keywords:', generatedKeywords);
+      
+      setKeywords(generatedKeywords);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
       
       toast({
         title: "Keywords Generated",
-        description: `Generated ${data.keywords.length} keyword suggestions`,
+        description: `Generated ${generatedKeywords.length} keyword suggestions`,
       });
     } catch (error) {
       console.error("Error generating keywords:", error);
       toast({
         title: "Error",
-        description: "Failed to generate keywords. Please try again later.",
+        description: "Failed to generate keywords. Please try again.",
         variant: "destructive",
       });
     } finally {
