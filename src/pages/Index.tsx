@@ -60,7 +60,7 @@ export default function Index() {
             {/* Ad between search and results */}
             <AdSense
               className="my-4"
-              adSlot="YOUR-AD-SLOT-1"
+              adSlot="1450711874"
               style={{ display: 'block', minHeight: '100px' }}
             />
             
