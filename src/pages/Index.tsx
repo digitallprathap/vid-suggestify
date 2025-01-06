@@ -50,7 +50,7 @@ export default function Index() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-center space-x-2 text-youtube-red">
           <Youtube size={40} />
-          <h1 className="text-3xl font-bold">YouTube Keywords Generator</h1>
+          <h1 className="text-3xl font-bold">YT Keywords Generator</h1>
         </div>
 
         <Card className="p-6">
