@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Youtube } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -53,26 +53,20 @@ export default function Index() {
           <h1 className="text-3xl font-bold">YouTube Keywords Generator</h1>
         </div>
 
-        {/* Top Ad */}
-        <AdSense
-          className="my-4"
-          adSlot="YOUR-AD-SLOT-1"
-          style={{ display: 'block', minHeight: '100px' }}
-        />
-
         <Card className="p-6">
           <div className="space-y-4">
             <SearchForm onSearch={generateKeywords} isLoading={isLoading} />
+            
+            {/* Ad between search and results */}
+            <AdSense
+              className="my-4"
+              adSlot="YOUR-AD-SLOT-1"
+              style={{ display: 'block', minHeight: '100px' }}
+            />
+            
             <KeywordResults keywords={keywords} />
           </div>
         </Card>
-
-        {/* Bottom Ad */}
-        <AdSense
-          className="my-4"
-          adSlot="YOUR-AD-SLOT-2"
-          style={{ display: 'block', minHeight: '100px' }}
-        />
 
         <RecentSearches searches={recentSearches} onSelect={(topic) => generateKeywords(topic, "medium")} />
       </div>
