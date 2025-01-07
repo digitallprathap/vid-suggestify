@@ -41,6 +41,7 @@ export default function AdminLogin() {
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
+    console.log("Attempting login with email:", values.email);
     
     try {
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
@@ -50,12 +51,16 @@ export default function AdminLogin() {
 
       if (error) throw error;
 
+      console.log("User authenticated, checking admin status");
+
       // Check if user is admin
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', user?.id)
         .single();
+
+      if (profileError) throw profileError;
 
       if (!profile?.is_admin) {
         await supabase.auth.signOut();
@@ -65,12 +70,15 @@ export default function AdminLogin() {
       toast({
         title: "Login successful",
         description: "Welcome back, admin!",
+        variant: "default",
       });
 
+      console.log("Admin access confirmed, redirecting to dashboard");
       navigate('/admin/dashboard');
     } catch (error: any) {
+      console.error("Login error:", error.message);
       toast({
-        title: "Error",
+        title: "Login failed",
         description: error.message,
         variant: "destructive",
       });
@@ -81,6 +89,8 @@ export default function AdminLogin() {
 
   const handleResetPassword = async (values: LoginFormValues) => {
     setLoading(true);
+    console.log("Attempting to send reset password email to:", values.email);
+    
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/admin/reset-password`,
@@ -89,13 +99,16 @@ export default function AdminLogin() {
       if (error) throw error;
 
       toast({
-        title: "Password reset email sent",
-        description: "Please check your email for the reset link.",
+        title: "Reset link sent",
+        description: "Please check your email for the password reset link.",
+        variant: "default",
       });
+      console.log("Password reset email sent successfully");
       setIsResetMode(false);
     } catch (error: any) {
+      console.error("Password reset error:", error.message);
       toast({
-        title: "Error",
+        title: "Reset failed",
         description: error.message,
         variant: "destructive",
       });
