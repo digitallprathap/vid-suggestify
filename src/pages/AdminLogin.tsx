@@ -6,22 +6,46 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Lock } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
     
     try {
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
       });
 
       if (error) throw error;
@@ -55,6 +79,31 @@ export default function AdminLogin() {
     }
   };
 
+  const handleResetPassword = async (values: LoginFormValues) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password reset email sent",
+        description: "Please check your email for the reset link.",
+      });
+      setIsResetMode(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-youtube-light p-4">
       <Card className="w-full max-w-md p-6 space-y-6">
@@ -62,36 +111,80 @@ export default function AdminLogin() {
           <div className="p-3 bg-youtube-red rounded-full">
             <Lock className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-youtube-text">Admin Login</h1>
+          <h1 className="text-2xl font-bold text-youtube-text">
+            {isResetMode ? "Reset Password" : "Admin Login"}
+          </h1>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-youtube-red hover:bg-red-600"
-            disabled={loading}
+        <Form {...form}>
+          <form 
+            onSubmit={form.handleSubmit(isResetMode ? handleResetPassword : handleLogin)} 
+            className="space-y-4"
           >
-            {loading ? "Logging in..." : "Login"}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!isResetMode && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-youtube-red hover:bg-red-600"
+              disabled={loading}
+            >
+              {loading
+                ? "Loading..."
+                : isResetMode
+                ? "Send Reset Link"
+                : "Login"}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="text-center">
+          <Button
+            variant="link"
+            onClick={() => {
+              setIsResetMode(!isResetMode);
+              form.reset();
+            }}
+            className="text-youtube-red hover:text-red-600"
+          >
+            {isResetMode ? "Back to Login" : "Forgot Password?"}
           </Button>
-        </form>
+        </div>
       </Card>
     </div>
   );
