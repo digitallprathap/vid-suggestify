@@ -17,8 +17,27 @@ export default function Index() {
   const generateKeywords = async (topic: string, competition: string) => {
     setIsLoading(true);
     try {
-      console.log('Calling YouTube API for:', { topic, competition });
-      
+      // First, check if we have cached results
+      console.log('Checking cache for:', { topic, competition });
+      const { data: cachedResults } = await supabase
+        .from('search_results')
+        .select('keywords')
+        .eq('topic', topic.toLowerCase())
+        .eq('competition', competition)
+        .maybeSingle();
+
+      if (cachedResults) {
+        console.log('Found cached results:', cachedResults);
+        setKeywords(cachedResults.keywords);
+        setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
+        toast({
+          title: "Keywords Retrieved",
+          description: `Retrieved ${cachedResults.keywords.length} cached keyword suggestions`,
+        });
+        return;
+      }
+
+      console.log('No cache found, calling YouTube API for:', { topic, competition });
       const { data, error } = await supabase.functions.invoke('youtube-search', {
         body: { topic, competition },
       });
@@ -26,6 +45,20 @@ export default function Index() {
       if (error) throw error;
       
       console.log('Received keywords from API:', data.keywords);
+      
+      // Store the results in the database
+      const { error: insertError } = await supabase
+        .from('search_results')
+        .insert({
+          topic: topic.toLowerCase(),
+          competition,
+          keywords: data.keywords,
+        });
+
+      if (insertError) {
+        console.error('Error caching results:', insertError);
+      }
+
       setKeywords(data.keywords);
       setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
       
@@ -57,7 +90,6 @@ export default function Index() {
           <div className="space-y-4">
             <SearchForm onSearch={generateKeywords} isLoading={isLoading} />
             
-            {/* Ad between search and results */}
             <AdSense
               className="my-4"
               adSlot="1450711874"
