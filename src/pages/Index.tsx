@@ -8,9 +8,14 @@ import RecentSearches from "@/components/RecentSearches";
 import AdSense from "@/components/AdSense";
 import { supabase } from "@/integrations/supabase/client";
 
+type KeywordResult = {
+  keyword: string;
+  score: number;
+};
+
 export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
-  const [keywords, setKeywords] = useState<Array<{ keyword: string; score: number }>>([]);
+  const [keywords, setKeywords] = useState<KeywordResult[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -28,11 +33,13 @@ export default function Index() {
 
       if (cachedResults) {
         console.log('Found cached results:', cachedResults);
-        setKeywords(cachedResults.keywords);
+        // Ensure the cached keywords match our expected type
+        const typedKeywords = cachedResults.keywords as KeywordResult[];
+        setKeywords(typedKeywords);
         setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
         toast({
           title: "Keywords Retrieved",
-          description: `Retrieved ${cachedResults.keywords.length} cached keyword suggestions`,
+          description: `Retrieved ${typedKeywords.length} cached keyword suggestions`,
         });
         return;
       }
