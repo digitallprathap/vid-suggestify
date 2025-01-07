@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ad_slots: {
+        Row: {
+          created_at: string
+          id: string
+          placement: string
+          slot_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          placement: string
+          slot_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          placement?: string
+          slot_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      adsense_settings: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_admin?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean | null
+        }
+        Relationships: []
+      }
       search_results: {
         Row: {
           competition: string

@@ -11,6 +11,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Youtube size={32} />
             <span className="text-xl font-bold">YT Keywords Generator</span>
           </Link>
+          <Link
+            to="/admin/login"
+            className="text-sm text-gray-600 hover:text-youtube-red"
+          >
+            Admin Login
+          </Link>
         </div>
       </header>
 
