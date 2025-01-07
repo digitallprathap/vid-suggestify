@@ -33,7 +33,6 @@ export default function Index() {
 
       if (cachedResults) {
         console.log('Found cached results:', cachedResults);
-        // Ensure the cached keywords match our expected type
         const typedKeywords = cachedResults.keywords as KeywordResult[];
         setKeywords(typedKeywords);
         setRecentSearches((prev) => [topic, ...prev.slice(0, 4)]);
