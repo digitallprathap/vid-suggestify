@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { loginAdmin, sendPasswordResetEmail } from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -41,39 +41,16 @@ export default function AdminLogin() {
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
-    console.log("Attempting login with email:", values.email);
     
     try {
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (error) throw error;
-
-      console.log("User authenticated, checking admin status");
-
-      // Check if user is admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user?.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (!profile?.is_admin) {
-        await supabase.auth.signOut();
-        throw new Error('Unauthorized access. Admin privileges required.');
-      }
-
+      await loginAdmin(values.email, values.password);
+      
       toast({
         title: "Login successful",
         description: "Welcome back, admin!",
         variant: "default",
       });
 
-      console.log("Admin access confirmed, redirecting to dashboard");
       navigate('/admin/dashboard');
     } catch (error: any) {
       console.error("Login error:", error.message);
@@ -89,24 +66,21 @@ export default function AdminLogin() {
 
   const handleResetPassword = async (values: LoginFormValues) => {
     setLoading(true);
-    console.log("Attempting to send reset password email to:", values.email);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/admin/reset-password`,
-      });
-
-      if (error) throw error;
+      await sendPasswordResetEmail(
+        values.email, 
+        `${window.location.origin}/admin/reset-password`
+      );
 
       toast({
         title: "Reset link sent",
         description: "Please check your email for the password reset link.",
         variant: "default",
       });
-      console.log("Password reset email sent successfully");
+      
       setIsResetMode(false);
     } catch (error: any) {
-      console.error("Password reset error:", error.message);
       toast({
         title: "Reset failed",
         description: error.message,
