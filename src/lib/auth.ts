@@ -60,25 +60,7 @@ export async function sendPasswordResetEmail(email: string, redirectUrl: string)
     throw new Error('Email is required');
   }
 
-  // First attempt to sign in with the email to verify it exists
-  const { data: { user }, error: signInError } = await supabase.auth.signInWithOtp({
-    email: email,
-    options: {
-      shouldCreateUser: false,
-    }
-  });
-
-  if (signInError) {
-    console.error("Error verifying email:", signInError.message);
-    if (signInError.message.includes("Email not confirmed")) {
-      // This means the user exists but hasn't confirmed their email
-      console.log("User exists but email not confirmed");
-    } else {
-      throw new Error('No account found with this email address');
-    }
-  }
-
-  // Send the password reset email
+  // Send the password reset email directly
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,
   });
