@@ -68,6 +68,10 @@ export default function AdminLogin() {
     setLoading(true);
     
     try {
+      if (!values.email) {
+        throw new Error("Please enter your email address");
+      }
+
       await sendPasswordResetEmail(
         values.email, 
         `${window.location.origin}/admin/reset-password`
@@ -80,7 +84,9 @@ export default function AdminLogin() {
       });
       
       setIsResetMode(false);
+      form.reset();
     } catch (error: any) {
+      console.error("Password reset error:", error.message);
       toast({
         title: "Reset failed",
         description: error.message,

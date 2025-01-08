@@ -53,9 +53,31 @@ export async function loginAdmin(email: string, password: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, redirectUrl: string) {
-  console.log("Sending password reset email to:", email);
+  console.log("Attempting to send password reset email to:", email);
   
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  // Validate email format
+  if (!email) {
+    throw new Error('Email is required');
+  }
+
+  // Check if the email belongs to an admin user
+  const { data: user, error: userError } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (userError) {
+    console.error("Error checking admin status:", userError.message);
+    throw userError;
+  }
+
+  if (!user?.is_admin) {
+    console.error("Non-admin email provided for password reset");
+    throw new Error('This email is not associated with an admin account');
+  }
+
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,
   });
 
@@ -64,5 +86,6 @@ export async function sendPasswordResetEmail(email: string, redirectUrl: string)
     throw error;
   }
 
-  console.log("Password reset email sent successfully");
+  console.log("Password reset email sent successfully:", data);
+  return data;
 }
