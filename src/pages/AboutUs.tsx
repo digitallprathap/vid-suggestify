@@ -8,7 +8,7 @@ export default function AboutUs() {
           <h1 className="text-3xl font-bold mb-6">About Us</h1>
           <div className="prose max-w-none">
             <p className="mb-4">
-              Welcome to YouTube Keywords Generator, your trusted tool for optimizing YouTube content visibility.
+              Welcome to YT Keywords Generator, your trusted tool for optimizing YouTube content visibility.
             </p>
             <h2 className="text-xl font-semibold mb-4">Our Mission</h2>
             <p className="mb-4">
