@@ -60,30 +60,22 @@ export async function sendPasswordResetEmail(email: string, redirectUrl: string)
     throw new Error('Email is required');
   }
 
-  // First, try to find the user by email
-  const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-    filters: {
-      email: email
+  // First attempt to sign in with the email to verify it exists
+  const { data: { user }, error: signInError } = await supabase.auth.signInWithOtp({
+    email: email,
+    options: {
+      shouldCreateUser: false,
     }
   });
 
-  if (getUserError) {
-    console.error("Error finding user:", getUserError.message);
-    throw getUserError;
-  }
-
-  const user = users?.[0];
-  if (!user) {
-    console.error("No user found with this email");
-    throw new Error('No account found with this email address');
-  }
-
-  // Check if the user is an admin
-  try {
-    await checkAdminStatus(user.id);
-  } catch (error) {
-    console.error("User is not an admin");
-    throw new Error('This email is not associated with an admin account');
+  if (signInError) {
+    console.error("Error verifying email:", signInError.message);
+    if (signInError.message.includes("Email not confirmed")) {
+      // This means the user exists but hasn't confirmed their email
+      console.log("User exists but email not confirmed");
+    } else {
+      throw new Error('No account found with this email address');
+    }
   }
 
   // Send the password reset email
